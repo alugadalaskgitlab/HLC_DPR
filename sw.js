@@ -1,3 +1,4 @@
+const CACHE_NAME = 'hlc-dpr-v4'; // was v3
 const CACHE = 'hlc-dpr-v1';
 const ASSETS = [
   './',
