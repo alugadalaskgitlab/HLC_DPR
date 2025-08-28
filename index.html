@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2563eb">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DPR – Mobile Fillable Form</title>
+<style>
+  :root{
+    --bg:#fafafa; --ink:#111; --muted:#6b7280; --brand:#2563eb; --line:#e5e7eb;
+  }
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:16px/1.35 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif}
+  .wrap{max-width:960px;margin:0 auto;padding:16px 14px 120px}
+  h1{font-size:20px;margin:0 0 12px}
+  .grid{display:grid;gap:12px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 1px 0 rgba(0,0,0,.03)}
+  .card>h2{font-size:16px;margin:0 0 10px;letter-spacing:.02em}
+  label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
+  input, select, textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff;font:inherit}
+  textarea{min-height:80px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .row-4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .toolbar{position:sticky;bottom:0;left:0;right:0;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);border-top:1px solid var(--line);padding:10px 14px;display:flex;gap:10px;justify-content:flex-end}
+  button{appearance:none;border:1px solid var(--brand);color:#fff;background:var(--brand);padding:10px 14px;border-radius:10px;font-weight:600}
+  button.secondary{background:#fff;color:var(--brand)}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{border:1px solid var(--line);padding:8px;vertical-align:top}
+  th{background:#f8fafc;text-align:left;font-weight:700}
+  .controls{display:flex;gap:6px}
+  .tiny{font-size:12px;color:var(--muted)}
+  .add{background:#fff;color:var(--brand);border-color:var(--brand)}
+  .rm{background:#ef4444;border-color:#ef4444}
+  .footnote{margin-top:8px;font-size:12px;color:var(--muted)}
+  @media print{
+    .toolbar,.controls,.add,.rm{display:none!important}
+    body{background:#fff}
+    .card{break-inside:avoid}
+    input, select, textarea{border:0;padding:0}
+    a[href]::after{content:""}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>HLC – Daily Progress Report (DPR)</h1>
+
+    <!-- HEADER block (anchors) -->
+    <section class="card" id="HEADER">
+      <h2>HEADER</h2>
+      <div class="row-4">
+        <div><label>Date (YYYY-MM-DD)</label><input id="date" type="date" /></div>
+        <div><label>Shift</label>
+          <select id="shift"><option>Day</option><option>Night</option></select>
+        </div>
+        <div><label>Division</label><input id="division" placeholder="Highway / Plant / Structures" /></div>
+        <div><label>Weather Condition</label><input id="weather" placeholder="Clear / Cloudy / Rain" /></div>
+      </div>
+      <div style="margin-top:10px"><label>Name of Work</label><input id="nameOfWork" placeholder="e.g., BC laying – KM 0/0 to 0/600" /></div>
+    </section>
+
+    <!-- ACTIVITY_PROGRESS block -->
+    <section class="card" id="ACTIVITY_PROGRESS">
+      <h2>ACTIVITY_PROGRESS</h2>
+      <table id="tbl-activity">
+        <thead>
+          <tr>
+            <th>Chainage From</th><th>Chainage To</th><th>Side</th><th>Activity</th>
+            <th>Length (m)</th><th>Width (m)</th><th>Thickness (mm)</th><th>Qty</th><th>UOM</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="controls">
+        <button class="add" onclick="addRow('tbl-activity', activityTemplate)">+ Add Row</button>
+      </div>
+      <div class="footnote">Use exact chainage format like 0/0 and 0/600. UOM examples: m², m³, t.</div>
+    </section>
+
+    <!-- EQUIPMENT_LOG block -->
+    <section class="card" id="EQUIPMENT_LOG">
+      <h2>EQUIPMENT_LOG</h2>
+      <table id="tbl-equip">
+        <thead>
+          <tr>
+            <th>Machine Type</th><th>Machine ID</th><th>Operator</th>
+            <th>Start (HH:MM)</th><th>End (HH:MM)</th><th>Total (hrs)</th>
+            <th>HM Start</th><th>HM End</th><th>Diesel (L)</th>
+            <th>Location/Chainage</th><th>Notes</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="controls">
+        <button class="add" onclick="addRow('tbl-equip', equipTemplate)">+ Add Row</button>
+      </div>
+      <div class="footnote">Enter either HM readings or leave blank. Total hours auto-calculates when Start & End are filled.</div>
+    </section>
+
+    <!-- LABOUR block -->
+    <section class="card" id="LABOUR">
+      <h2>LABOUR</h2>
+      <table id="tbl-labour">
+        <thead>
+          <tr>
+            <th>Contractor</th><th>Male</th><th>Female</th><th>Skilled</th><th>Unskilled</th><th>Total</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="controls">
+        <button class="add" onclick="addRow('tbl-labour', labourTemplate)">+ Add Row</button>
+      </div>
+    </section>
+
+    <!-- MATERIALS_RECEIVED block -->
+    <section class="card" id="MATERIALS_RECEIVED">
+      <h2>MATERIALS_RECEIVED</h2>
+      <table id="tbl-mrecv">
+        <thead>
+          <tr>
+            <th>Date/Time</th><th>Material</th><th>UOM</th><th>Qty/Trip</th><th>Trips</th><th>Total Qty</th>
+            <th>Supplier</th><th>Transporter</th><th>Vehicle Nos</th><th>Source</th><th>Notes</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="controls">
+        <button class="add" onclick="addRow('tbl-mrecv', mrecvTemplate)">+ Add Row</button>
+      </div>
+    </section>
+
+    <!-- MATERIALS_ISSUED block -->
+    <section class="card" id="MATERIALS_ISSUED">
+      <h2>MATERIALS_ISSUED</h2>
+      <table id="tbl-missue">
+        <thead>
+          <tr>
+            <th>Material</th><th>Qty</th><th>UOM</th><th>Issued To (crew/machine)</th>
+            <th>Purpose/Activity/Chainage</th><th>Notes</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="controls">
+        <button class="add" onclick="addRow('tbl-missue', missueTemplate)">+ Add Row</button>
+      </div>
+    </section>
+
+    <div class="toolbar">
+      <button class="secondary" onclick="clearAll()">Clear</button>
+      <button onclick="window.print()">Print / Save as PDF</button>
+    </div>
+  </div>
+
+<script>
+  // ----- row templates -----
+  const activityTemplate = () => tr([
+    text('Chainage From','0/0'), text('Chainage To','0/600'), text('Side','L/R/N'), text('Activity','BC laying'),
+    num('Length (m)'), num('Width (m)'), num('Thickness (mm)'), num('Qty'), text('UOM','m²')
+  ]);
+
+  const equipTemplate = () => {
+    const start = time('Start');
+    const end = time('End');
+    const total = num('Total (hrs)');
+    // auto-calc total
+    start.addEventListener('change', ()=>calcTotal(start,end,total));
+    end.addEventListener('change', ()=>calcTotal(start,end,total));
+    return tr([
+      text('Machine Type','Paver'), text('Machine ID','AP-200'), text('Operator',''),
+      start, end, total, num('HM Start'), num('HM End'), num('Diesel (L)'),
+      text('Location/Chainage','0/0–0/600'), text('Notes','')
+    ]);
+  }
+
+  const labourTemplate = () => {
+    const male = num('Male');
+    const female = num('Female');
+    const skilled = num('Skilled');
+    const unskilled = num('Unskilled');
+    const total = num('Total');
+    const recalc = ()=> total.value = (toN(male.value)+toN(female.value))||'';
+    male.addEventListener('input',recalc); female.addEventListener('input',recalc);
+    return tr([ text('Contractor',''), male, female, skilled, unskilled, total ]);
+  }
+
+  const mrecvTemplate = () => {
+    const qty = num('Qty/Trip');
+    const trips = num('Trips');
+    const total = num('Total Qty');
+    const recalc = ()=> total.value = (toN(qty.value)*toN(trips.value) || '').toString();
+    qty.addEventListener('input',recalc); trips.addEventListener('input',recalc);
+    return tr([
+      datetime('Date/Time'), text('Material','VG-30 Bitumen'), text('UOM','t'), qty, trips, total,
+      text('Supplier',''), text('Transporter',''), text('Vehicle Nos',''), text('Source',''), text('Notes','')
+    ]);
+  }
+
+  const missueTemplate = () => tr([
+    text('Material','Diesel (HSD)'), num('Qty'), text('UOM','L'), text('Issued To (crew/machine)','AP-200'),
+    text('Purpose/Activity/Chainage','BC laying 0/0–0/600'), text('Notes','')
+  ]);
+
+  // ----- helpers -----
+  const toN = v => Number(v||0);
+  function tr(cells){
+    const row = document.createElement('tr');
+    for(const el of cells){ const td=document.createElement('td'); td.appendChild(el); row.appendChild(td); }
+    const td=document.createElement('td');
+    td.className='controls';
+    const rm=document.createElement('button'); rm.textContent='Remove'; rm.className='rm'; rm.onclick=()=>row.remove();
+    td.appendChild(rm); row.appendChild(td);
+    return row;
+  }
+  function text(ph='',def=''){ const i=document.createElement('input'); i.placeholder=def||ph; i.setAttribute('aria-label', ph); return i; }
+  function num(ph=''){ const i=text(ph); i.type='number'; i.step='any'; return i; }
+  function time(ph=''){ const i=text(ph); i.type='time'; return i; }
+  function datetime(ph=''){ const i=text(ph); i.type='datetime-local'; return i; }
+
+  function addRow(tblId, tmpl){ document.querySelector(`#${tblId} tbody`).appendChild(tmpl()); }
+  function calcTotal(start,end,total){
+    if(!start.value || !end.value){ total.value=''; return; }
+    const [sh,sm]=start.value.split(':').map(Number); const [eh,em]=end.value.split(':').map(Number);
+    let mins=(eh*60+em)-(sh*60+sm); if(mins<0) mins+=24*60; total.value=(mins/60).toFixed(2);
+  }
+  function clearAll(){ if(confirm('Clear all fields?')){ document.querySelectorAll('input, textarea, select').forEach(el=>{if(el.type!=='button')el.value='';}); document.querySelectorAll('tbody').forEach(t=>t.innerHTML=''); seed(); } }
+
+  // seed with one row per table for convenience
+  function seed(){ addRow('tbl-activity', activityTemplate); addRow('tbl-equip', equipTemplate); addRow('tbl-labour', labourTemplate); addRow('tbl-mrecv', mrecvTemplate); addRow('tbl-missue', missueTemplate); }
+  seed();
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(console.error);
+    });
+  }
+</script>
+</body>
+</html>
