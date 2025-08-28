@@ -12,6 +12,23 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
 
   <style>
+
+/* Hour-meter (machine counter) fields: show up to 8+ digits clearly */
+input.hmStart,
+input.hmEnd {
+  width: 12ch;        /* extra room so 2570.40, 2572.00 fit even with spinners */
+  min-width: 12ch;
+  text-align: right;
+  font-variant-numeric: tabular-nums; /* keeps digits aligned */
+}
+/* Wider inputs only for Hour-Meter counters */
+input.hmStart,
+input.hmEnd {
+  width: 12ch;
+  min-width: 12ch;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
     :root{ --bg:#fafafa; --ink:#111; --muted:#6b7280; --brand:#2563eb; --line:#e5e7eb; }
     html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:16px/1.35 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
     .wrap{max-width:960px;margin:0 auto;padding:16px 14px 120px}
@@ -37,7 +54,8 @@
       .card{break-inside:avoid}
       input,select,textarea{border:0;padding:0}
       a[href]::after{content:""}
-    }
+   
+ }
   </style>
 </head>
 <body>
@@ -87,24 +105,50 @@
     </section>
 
     <!-- ===== EQUIPMENT_LOG (unchanged) ===== -->
-    <section class="card" id="EQUIPMENT_LOG">
-      <h2>EQUIPMENT_LOG</h2>
-      <table id="tbl-equip">
-        <thead>
-          <tr>
-            <th>Machine Type</th><th>Machine ID</th><th>Operator</th>
-            <th>Start (HH:MM)</th><th>End (HH:MM)</th><th>Total (hrs)</th>
-            <th>HM Start</th><th>HM End</th><th>Diesel (L)</th>
-            <th>Location/Chainage</th><th>Notes</th><th></th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <div class="controls">
-        <button class="add" onclick="addRow('tbl-equip', equipTemplate)">+ Add Row</button>
-      </div>
-      <div class="footnote">HM hours are End − Start (wraps midnight). Filling start & end also auto-fills Total (hrs).</div>
-    </section>
+<section class="card" id="EQUIPMENT_LOG">
+  <h2>EQUIPMENT_LOG</h2>
+
+  <table id="tbl-equip" aria-label="Equipment Log">
+    <thead>
+      <tr>
+        <th style="min-width:130px">Machine Type</th>
+        <th>Machine ID</th>
+        <th>Operator</th>
+        <th>Start (HH:MM)</th>
+        <th>End (HH:MM)</th>
+        <th>Total (hrs)</th>
+        <th>HM Start</th>
+        <th>HM End</th>
+        <th>HM Total (hrs)</th>
+        <th>Diesel (L)</th>
+        <th>Location/Chainage</th>
+        <th>Notes</th>
+        <th></th>
+      </tr>
+    </thead>
+
+    <!-- rows are added by JS -->
+    <tbody></tbody>
+
+    <tfoot>
+      <tr>
+        <td colspan="6"></td>
+        <td colspan="2" style="text-align:right">Totals:</td>
+        <td id="eq_total_hm">0</td>
+        <td id="eq_total_diesel">0</td>
+        <td colspan="2"></td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <div class="controls">
+    <button class="add" onclick="addRow('tbl-equip', equipTemplate)">+ Add Row</button>
+  </div>
+  <div class="footnote">
+    HM hours are End − Start (wraps midnight). Filling start & end also auto-fills Total (hrs).
+  </div>
+</section>
 
     <!-- ===== LABOUR (unchanged) ===== -->
     <section class="card" id="LABOUR">
@@ -202,26 +246,65 @@
     ]);
 
     const equipTemplate = () => {
-      const start = time(), end = time(), total = num('Total (hrs)');
-      const calc = ()=>{
-        if(!start.value || !end.value){ total.value=''; return; }
-        const [sh,sm]=start.value.split(':').map(Number);
-        const [eh,em]=end.value.split(':').map(Number);
-        let mins=(eh*60+em)-(sh*60+sm); if(mins<0) mins+=24*60;
-        total.value=(mins/60).toFixed(2);
-      };
-      start.addEventListener('change',calc);
-      end.addEventListener('change',calc);
-      return tr([
-        text('Machine Type','Paver'),
-        text('Machine ID','AP-200'),
-        text('Operator',''),
-        start,end,total,
-        num('HM Start'), num('HM End'), num('Diesel (L)'),
-        text('Location/Chainage','0/0–0/600'),
-        text('Notes','')
-      ]);
+    // Shift time -> Total (hrs)
+    const start = time(), end = time(), total = num('Total (hrs)');
+    const calcShift = () => {
+      if (!start.value || !end.value) { total.value = ''; return; }
+      const [sh, sm] = start.value.split(':').map(Number);
+      const [eh, em] = end.value.split(':').map(Number);
+      let mins = (eh*60 + em) - (sh*60 + sm);
+      if (mins < 0) mins += 24*60;           // wrap midnight
+      total.value = (mins / 60).toFixed(2);
     };
+    start.addEventListener('change', calcShift);
+    end.addEventListener('change',   calcShift);
+
+    // HM start/end -> HM total (hrs) with fixed-width inputs
+    const hmStart = num('HM Start'); hmStart.className = 'hmStart'; hmStart.step = '0.01';
+    const hmEnd   = num('HM End');   hmEnd.className   = 'hmEnd';   hmEnd.step   = '0.01';
+    const hmTot   = num('HM Total (hrs)'); hmTot.readOnly = true;
+
+    const recalcHM = () => {
+      const s = parseFloat(hmStart.value);
+      const e = parseFloat(hmEnd.value);
+      if (Number.isFinite(s) && Number.isFinite(e)) {
+        hmTot.value = Math.max(e - s, 0).toFixed(2);  // clamp negative to 0
+      } else {
+        hmTot.value = '';
+      }
+    };
+    hmStart.addEventListener('input', recalcHM);
+    hmEnd.addEventListener('input',   recalcHM);
+
+    const diesel = num('Diesel (L)'); diesel.step = '0.01';
+
+    return tr([
+      text('Machine Type','Paver'),
+      text('Machine ID','AP-200'),
+      text('Operator',''),
+      start, end, total,
+      hmStart, hmEnd, hmTot,
+      diesel,
+      text('Location/Chainage','0/0–0/600'),
+      text('Notes','')
+    ]);
+  };
+
+// footer totals for HM Total & Diesel
+function sumEquipTotals(){
+  let hm = 0, dsl = 0;
+  document.querySelectorAll('#tbl-equip tbody .hmTotal').forEach(i => {
+    const v = parseFloat(i.value); if (Number.isFinite(v)) hm += v;
+  });
+  document.querySelectorAll('#tbl-equip tbody .diesel').forEach(i => {
+    const v = parseFloat(i.value); if (Number.isFinite(v)) dsl += v;
+  });
+  const hmCell = document.getElementById('eq_total_hm');
+  const dlCell = document.getElementById('eq_total_diesel');
+  if (hmCell) hmCell.textContent = hm.toFixed(2);
+  if (dlCell) dlCell.textContent = dsl.toFixed(2);
+}
+
 
     const labourTemplate = () => {
       const male=num('Male'), female=num('Female'), skilled=num('Skilled'), unskilled=num('Unskilled'), total=num('Total');
@@ -277,3 +360,64 @@
 </body>
 </html>
 
+<script>
+// --- HM helpers and totals (targets #tbl-equip) ---
+function parseHM(v) {
+  const n = parseFloat(String(v).replace(/[^0-9.]/g, ''));
+  return Number.isFinite(n) ? n : null;
+}
+
+function calcHMRow(tr) {
+  const s = parseHM(tr.querySelector('.hmStart')?.value);
+  const e = parseHM(tr.querySelector('.hmEnd')?.value);
+  const out = tr.querySelector('.hmTotal');
+  let val = '';
+  if (s != null && e != null) {
+    let t = e - s;
+    if (t < 0) t += 24;        // wrap if end < start
+    if (t < 0) t = 0;
+    val = t.toFixed(2);
+  }
+  if (out) out.value = val;
+}
+
+function sumEquipHMTotals() {
+  let hmSum = 0;
+  document.querySelectorAll('#tbl-equip tbody .hmTotal').forEach(i => {
+    const n = parseFloat(i.value);
+    if (Number.isFinite(n)) hmSum += n;
+  });
+  const hmCell = document.getElementById('eq_total_hm');
+  if (hmCell) hmCell.textContent = hmSum.toFixed(2);
+}
+
+// Recompute when HM start/end change
+document.getElementById('tbl-equip')?.addEventListener('input', (ev) => {
+  if (ev.target.matches('.hmStart, .hmEnd')) {
+    const tr = ev.target.closest('tr');
+    if (tr) {
+      calcHMRow(tr);
+      sumEquipHMTotals();
+    }
+  }
+});
+
+// After adding a new equipment row, initialize its HM total.
+// If your add button has id="addEquip" this will hook it:
+(function hookAddRow(){
+  const btn = document.getElementById('addEquip');
+  const table = document.getElementById('tbl-equip');
+  if (!btn || !table) return;
+  btn.addEventListener('click', () => {
+    const tbody = table.querySelector('tbody');
+    const lastBefore = tbody.querySelector('tr:last-child');
+    setTimeout(() => {
+      const lastAfter = tbody.querySelector('tr:last-child');
+      if (lastAfter && lastAfter !== lastBefore) {
+        calcHMRow(lastAfter);
+        sumEquipHMTotals();
+      }
+    }, 0);
+  });
+})();
+</script>
