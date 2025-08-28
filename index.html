@@ -1,244 +1,360 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#2563eb">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>DPR – Mobile Fillable Form</title>
-<style>
-  :root{
-    --bg:#fafafa; --ink:#111; --muted:#6b7280; --brand:#2563eb; --line:#e5e7eb;
-  }
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:16px/1.35 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif}
-  .wrap{max-width:960px;margin:0 auto;padding:16px 14px 120px}
-  h1{font-size:20px;margin:0 0 12px}
-  .grid{display:grid;gap:12px}
-  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 1px 0 rgba(0,0,0,.03)}
-  .card>h2{font-size:16px;margin:0 0 10px;letter-spacing:.02em}
-  label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
-  input, select, textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff;font:inherit}
-  textarea{min-height:80px}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  .row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-  .row-4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-  .toolbar{position:sticky;bottom:0;left:0;right:0;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);border-top:1px solid var(--line);padding:10px 14px;display:flex;gap:10px;justify-content:flex-end}
-  button{appearance:none;border:1px solid var(--brand);color:#fff;background:var(--brand);padding:10px 14px;border-radius:10px;font-weight:600}
-  button.secondary{background:#fff;color:var(--brand)}
-  table{width:100%;border-collapse:collapse;font-size:14px}
-  th,td{border:1px solid var(--line);padding:8px;vertical-align:top}
-  th{background:#f8fafc;text-align:left;font-weight:700}
-  .controls{display:flex;gap:6px}
-  .tiny{font-size:12px;color:var(--muted)}
-  .add{background:#fff;color:var(--brand);border-color:var(--brand)}
-  .rm{background:#ef4444;border-color:#ef4444}
-  .footnote{margin-top:8px;font-size:12px;color:var(--muted)}
-  @media print{
-    .toolbar,.controls,.add,.rm{display:none!important}
-    body{background:#fff}
-    .card{break-inside:avoid}
-    input, select, textarea{border:0;padding:0}
-    a[href]::after{content:""}
-  }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>HLC DPR (Mobile Form)</title>
+
+  <!-- PWA bits (unchanged) -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#2563eb">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
+  <style>
+    :root{--bg:#0b1020;--card:#11162a;--muted:#9097b3;--fg:#eaf0ff;--accent:#60a5fa;--ok:#16a34a;--warn:#f59e0b;}
+    *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif}
+    html,body{margin:0;background:#0b1020;color:var(--fg)}
+    .wrap{max-width:980px;margin:0 auto;padding:16px 14px 80px}
+    h1{font-size:22px;margin:10px 0 14px}
+    .card{background:var(--card);border:1px solid #1b2140;border-radius:14px;padding:14px;margin:12px 0}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .field{flex:1 1 180px;display:flex;flex-direction:column;gap:6px}
+    label{font-size:12px;color:var(--muted)}
+    input,select,textarea{width:100%;padding:10px 12px;border:1px solid #25305a;background:#0e1430;color:var(--fg);border-radius:10px}
+    textarea{min-height:70px}
+    table{width:100%;border-collapse:collapse;margin-top:8px}
+    th,td{border-bottom:1px solid #1b2140;padding:8px;text-align:left;vertical-align:middle}
+    th{font-size:12px;color:var(--muted);font-weight:600}
+    tfoot td{font-weight:700}
+    .btn{appearance:none;border:1px solid #2a3768;background:#13204d;color:var(--fg);padding:9px 12px;border-radius:10px;cursor:pointer}
+    .btn:active{transform:translateY(1px)}
+    .btn.primary{background:#1d4ed8;border-color:#1e3a8a}
+    .btn.ghost{background:transparent}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .totals{font-size:13px;color:var(--muted);margin-top:8px}
+    .pill{display:inline-block;background:#121a37;border:1px solid #2a3768;padding:4px 8px;border-radius:999px;margin:2px 6px 0 0}
+    .right{display:flex;justify-content:flex-end}
+    .hint{font-size:12px;color:var(--muted)}
+  </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>HLC – Daily Progress Report (DPR)</h1>
+    <h1>HLC Daily Progress Report</h1>
 
-    <!-- HEADER block (anchors) -->
-    <section class="card" id="HEADER">
-      <h2>HEADER</h2>
-      <div class="row-4">
-        <div><label>Date (YYYY-MM-DD)</label><input id="date" type="date" /></div>
-        <div><label>Shift</label>
-          <select id="shift"><option>Day</option><option>Night</option></select>
+    <!-- Header / Meta -->
+    <div class="card">
+      <div class="row">
+        <div class="field">
+          <label>Date</label>
+          <input id="d_date" type="date">
         </div>
-        <div><label>Division</label><input id="division" placeholder="Highway / Plant / Structures" /></div>
-        <div><label>Weather Condition</label><input id="weather" placeholder="Clear / Cloudy / Rain" /></div>
+        <div class="field">
+          <label>Shift</label>
+          <select id="d_shift">
+            <option value="Day">Day</option>
+            <option value="Night">Night</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Weather</label>
+          <input id="d_weather" placeholder="Sunny / Cloudy / Rainy…">
+        </div>
+        <div class="field">
+          <label>Engineer’s Name</label>
+          <input id="d_engineer" placeholder="Enter reporting engineer/supervisor">
+        </div>
       </div>
-      <div style="margin-top:10px"><label>Name of Work</label><input id="nameOfWork" placeholder="e.g., BC laying – KM 0/0 to 0/600" /></div>
-    </section>
-
-    <!-- ACTIVITY_PROGRESS block -->
-    <section class="card" id="ACTIVITY_PROGRESS">
-      <h2>ACTIVITY_PROGRESS</h2>
-      <table id="tbl-activity">
-        <thead>
-          <tr>
-            <th>Chainage From</th><th>Chainage To</th><th>Side</th><th>Activity</th>
-            <th>Length (m)</th><th>Width (m)</th><th>Thickness (mm)</th><th>Qty</th><th>UOM</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <div class="controls">
-        <button class="add" onclick="addRow('tbl-activity', activityTemplate)">+ Add Row</button>
-      </div>
-      <div class="footnote">Use exact chainage format like 0/0 and 0/600. UOM examples: m², m³, t.</div>
-    </section>
-
-    <!-- EQUIPMENT_LOG block -->
-    <section class="card" id="EQUIPMENT_LOG">
-      <h2>EQUIPMENT_LOG</h2>
-      <table id="tbl-equip">
-        <thead>
-          <tr>
-            <th>Machine Type</th><th>Machine ID</th><th>Operator</th>
-            <th>Start (HH:MM)</th><th>End (HH:MM)</th><th>Total (hrs)</th>
-            <th>HM Start</th><th>HM End</th><th>Diesel (L)</th>
-            <th>Location/Chainage</th><th>Notes</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <div class="controls">
-        <button class="add" onclick="addRow('tbl-equip', equipTemplate)">+ Add Row</button>
-      </div>
-      <div class="footnote">Enter either HM readings or leave blank. Total hours auto-calculates when Start & End are filled.</div>
-    </section>
-
-    <!-- LABOUR block -->
-    <section class="card" id="LABOUR">
-      <h2>LABOUR</h2>
-      <table id="tbl-labour">
-        <thead>
-          <tr>
-            <th>Contractor</th><th>Male</th><th>Female</th><th>Skilled</th><th>Unskilled</th><th>Total</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <div class="controls">
-        <button class="add" onclick="addRow('tbl-labour', labourTemplate)">+ Add Row</button>
-      </div>
-    </section>
-
-    <!-- MATERIALS_RECEIVED block -->
-    <section class="card" id="MATERIALS_RECEIVED">
-      <h2>MATERIALS_RECEIVED</h2>
-      <table id="tbl-mrecv">
-        <thead>
-          <tr>
-            <th>Date/Time</th><th>Material</th><th>UOM</th><th>Qty/Trip</th><th>Trips</th><th>Total Qty</th>
-            <th>Supplier</th><th>Transporter</th><th>Vehicle Nos</th><th>Source</th><th>Notes</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <div class="controls">
-        <button class="add" onclick="addRow('tbl-mrecv', mrecvTemplate)">+ Add Row</button>
-      </div>
-    </section>
-
-    <!-- MATERIALS_ISSUED block -->
-    <section class="card" id="MATERIALS_ISSUED">
-      <h2>MATERIALS_ISSUED</h2>
-      <table id="tbl-missue">
-        <thead>
-          <tr>
-            <th>Material</th><th>Qty</th><th>UOM</th><th>Issued To (crew/machine)</th>
-            <th>Purpose/Activity/Chainage</th><th>Notes</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <div class="controls">
-        <button class="add" onclick="addRow('tbl-missue', missueTemplate)">+ Add Row</button>
-      </div>
-    </section>
-
-    <div class="toolbar">
-      <button class="secondary" onclick="clearAll()">Clear</button>
-      <button onclick="window.print()">Print / Save as PDF</button>
     </div>
+
+    <!-- Equipment / Machinery Log -->
+    <div class="card" id="equipCard">
+      <div class="row">
+        <div class="field"><label>Equipment / Machinery Log</label></div>
+      </div>
+      <table id="equipTable" aria-label="Equipment Log">
+        <thead>
+          <tr>
+            <th style="min-width:130px">Machine</th>
+            <th>HM Start</th>
+            <th>HM End</th>
+            <th>HM (hrs)</th>
+            <th>Diesel (L)</th>
+            <th>Remarks</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3" class="right">Totals:</td>
+            <td id="eq_total_hm">0</td>
+            <td id="eq_total_diesel">0</td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+      <div class="toolbar">
+        <button class="btn" id="addEquip">+ Add Equipment</button>
+      </div>
+      <div class="hint">HM (hour-meter) hours are calculated as <b>End − Start</b> per row and summed here.</div>
+    </div>
+
+    <!-- Materials / Transport -->
+    <div class="card" id="matCard">
+      <div class="row">
+        <div class="field"><label>Materials / Transport</label></div>
+      </div>
+      <table id="matTable" aria-label="Materials">
+        <thead>
+          <tr>
+            <th style="min-width:130px">Material</th>
+            <th>Transporter / Source</th>
+            <th>Loads</th>
+            <th>Qty / Load</th>
+            <th>Unit</th>
+            <th>Total Qty</th>
+            <th>Remarks</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="8">
+              <div class="totals">Unit-wise totals: <span id="matTotals"></span></div>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+      <div class="toolbar">
+        <button class="btn" id="addMat">+ Add Material</button>
+      </div>
+      <div class="hint">Total Qty = <b>Loads × Qty/Load</b>. We also show combined totals per unit (e.g., t, m³, m²).</div>
+    </div>
+
+    <!-- Notes -->
+    <div class="card">
+      <div class="row">
+        <div class="field" style="flex:1 1 100%">
+          <label>Additional Notes</label>
+          <textarea id="d_notes" placeholder="Any inspections, issues, safety notes, visitors, etc."></textarea>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button class="btn" id="saveBtn">Save (local)</button>
+        <button class="btn primary" id="printBtn">Print / Share PDF</button>
+        <span class="hint">Data auto-saves locally and works offline.</span>
+      </div>
+    </div>
+
+    <div class="hint">App version: <span id="ver">DPRForm v2 (Engineer + Qty + HM totals)</span></div>
   </div>
 
-<script>
-  // ----- row templates -----
-  const activityTemplate = () => tr([
-    text('Chainage From','0/0'), text('Chainage To','0/600'), text('Side','L/R/N'), text('Activity','BC laying'),
-    num('Length (m)'), num('Width (m)'), num('Thickness (mm)'), num('Qty'), text('UOM','m²')
-  ]);
+  <!-- Row templates -->
+  <template id="equipRow">
+    <tr>
+      <td><input placeholder="Excavator, Paver, JCB…" /></td>
+      <td><input type="number" step="0.01" inputmode="decimal" placeholder="Start" class="hmStart" /></td>
+      <td><input type="number" step="0.01" inputmode="decimal" placeholder="End" class="hmEnd" /></td>
+      <td class="hmHours">0</td>
+      <td><input type="number" step="0.01" inputmode="decimal" placeholder="L" class="diesel" /></td>
+      <td><input placeholder="Remarks" /></td>
+      <td><button class="btn ghost del" title="Delete">✕</button></td>
+    </tr>
+  </template>
 
-  const equipTemplate = () => {
-    const start = time('Start');
-    const end = time('End');
-    const total = num('Total (hrs)');
-    // auto-calc total
-    start.addEventListener('change', ()=>calcTotal(start,end,total));
-    end.addEventListener('change', ()=>calcTotal(start,end,total));
-    return tr([
-      text('Machine Type','Paver'), text('Machine ID','AP-200'), text('Operator',''),
-      start, end, total, num('HM Start'), num('HM End'), num('Diesel (L)'),
-      text('Location/Chainage','0/0–0/600'), text('Notes','')
-    ]);
-  }
+  <template id="matRow">
+    <tr>
+      <td><input placeholder="Aggregate 40mm, Bitumen, Cement…" /></td>
+      <td><input placeholder="Transporter / Source" /></td>
+      <td><input type="number" step="1" inputmode="numeric" min="0" class="loads" placeholder="#" /></td>
+      <td><input type="number" step="0.01" inputmode="decimal" min="0" class="qtyPer" placeholder="per load" /></td>
+      <td>
+        <select class="unit">
+          <option value="t">t</option>
+          <option value="m³">m³</option>
+          <option value="m²">m²</option>
+          <option value="kg">kg</option>
+          <option value="nos">nos</option>
+        </select>
+      </td>
+      <td class="rowTotal">0</td>
+      <td><input placeholder="Remarks" /></td>
+      <td><button class="btn ghost del" title="Delete">✕</button></td>
+    </tr>
+  </template>
 
-  const labourTemplate = () => {
-    const male = num('Male');
-    const female = num('Female');
-    const skilled = num('Skilled');
-    const unskilled = num('Unskilled');
-    const total = num('Total');
-    const recalc = ()=> total.value = (toN(male.value)+toN(female.value))||'';
-    male.addEventListener('input',recalc); female.addEventListener('input',recalc);
-    return tr([ text('Contractor',''), male, female, skilled, unskilled, total ]);
-  }
+  <script>
+    // --- PWA SW register (kept) ---
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(()=>{});
+    }
 
-  const mrecvTemplate = () => {
-    const qty = num('Qty/Trip');
-    const trips = num('Trips');
-    const total = num('Total Qty');
-    const recalc = ()=> total.value = (toN(qty.value)*toN(trips.value) || '').toString();
-    qty.addEventListener('input',recalc); trips.addEventListener('input',recalc);
-    return tr([
-      datetime('Date/Time'), text('Material','VG-30 Bitumen'), text('UOM','t'), qty, trips, total,
-      text('Supplier',''), text('Transporter',''), text('Vehicle Nos',''), text('Source',''), text('Notes','')
-    ]);
-  }
+    // ---- helpers ----
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+    const num = v => isFinite(parseFloat(v)) ? parseFloat(v) : 0;
 
-  const missueTemplate = () => tr([
-    text('Material','Diesel (HSD)'), num('Qty'), text('UOM','L'), text('Issued To (crew/machine)','AP-200'),
-    text('Purpose/Activity/Chainage','BC laying 0/0–0/600'), text('Notes','')
-  ]);
+    // ---- state save/restore ----
+    const LS_KEY = 'hlc_dpr_v2';
+    function saveLocal(){
+      const data = {
+        date: $('#d_date').value,
+        shift: $('#d_shift').value,
+        weather: $('#d_weather').value,
+        engineer: $('#d_engineer').value,
+        notes: $('#d_notes').value,
+        equip: $$('#equipTable tbody tr').map(tr => {
+          const [m, s, e, _h, d, r] = $$('td,th', tr);
+          return {
+            machine: $('input', m).value,
+            hmStart: $('input', s).value,
+            hmEnd: $('input', e).value,
+            diesel: $('input', d).value,
+            remarks: $('input', r).value
+          };
+        }),
+        mat: $$('#matTable tbody tr').map(tr => {
+          const [mat, src, loads, qper, unit, _tot, rem] = $$('td,th', tr);
+          return {
+            material: $('input', mat).value,
+            source: $('input', src).value,
+            loads: $('input', loads).value,
+            qtyPer: $('input', qper).value,
+            unit: $('select', unit).value,
+            remarks: $('input', rem).value
+          };
+        })
+      };
+      localStorage.setItem(LS_KEY, JSON.stringify(data));
+    }
 
-  // ----- helpers -----
-  const toN = v => Number(v||0);
-  function tr(cells){
-    const row = document.createElement('tr');
-    for(const el of cells){ const td=document.createElement('td'); td.appendChild(el); row.appendChild(td); }
-    const td=document.createElement('td');
-    td.className='controls';
-    const rm=document.createElement('button'); rm.textContent='Remove'; rm.className='rm'; rm.onclick=()=>row.remove();
-    td.appendChild(rm); row.appendChild(td);
-    return row;
-  }
-  function text(ph='',def=''){ const i=document.createElement('input'); i.placeholder=def||ph; i.setAttribute('aria-label', ph); return i; }
-  function num(ph=''){ const i=text(ph); i.type='number'; i.step='any'; return i; }
-  function time(ph=''){ const i=text(ph); i.type='time'; return i; }
-  function datetime(ph=''){ const i=text(ph); i.type='datetime-local'; return i; }
+    function restoreLocal(){
+      const raw = localStorage.getItem(LS_KEY);
+      if(!raw) return addEquipRow(), addMatRow();
 
-  function addRow(tblId, tmpl){ document.querySelector(`#${tblId} tbody`).appendChild(tmpl()); }
-  function calcTotal(start,end,total){
-    if(!start.value || !end.value){ total.value=''; return; }
-    const [sh,sm]=start.value.split(':').map(Number); const [eh,em]=end.value.split(':').map(Number);
-    let mins=(eh*60+em)-(sh*60+sm); if(mins<0) mins+=24*60; total.value=(mins/60).toFixed(2);
-  }
-  function clearAll(){ if(confirm('Clear all fields?')){ document.querySelectorAll('input, textarea, select').forEach(el=>{if(el.type!=='button')el.value='';}); document.querySelectorAll('tbody').forEach(t=>t.innerHTML=''); seed(); } }
+      const data = JSON.parse(raw);
+      $('#d_date').value = data.date || '';
+      $('#d_shift').value = data.shift || 'Day';
+      $('#d_weather').value = data.weather || '';
+      $('#d_engineer').value = data.engineer || '';
+      $('#d_notes').value = data.notes || '';
 
-  // seed with one row per table for convenience
-  function seed(){ addRow('tbl-activity', activityTemplate); addRow('tbl-equip', equipTemplate); addRow('tbl-labour', labourTemplate); addRow('tbl-mrecv', mrecvTemplate); addRow('tbl-missue', missueTemplate); }
-  seed();
-</script>
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js').catch(console.error);
+      // Equip
+      if(data.equip && data.equip.length){
+        data.equip.forEach(add => addEquipRow(add));
+      } else addEquipRow();
+
+      // Mat
+      if(data.mat && data.mat.length){
+        data.mat.forEach(add => addMatRow(add));
+      } else addMatRow();
+
+      recalcAll();
+    }
+
+    // ---- Equipment table ----
+    function addEquipRow(pref){
+      const tr = document.importNode($('#equipRow').content, true).firstElementChild;
+      if(pref){
+        const [m, s, e, _h, d, r] = $$('td', tr);
+        $('input', m).value = pref.machine || '';
+        $('.hmStart', tr).value = pref.hmStart || '';
+        $('.hmEnd', tr).value = pref.hmEnd || '';
+        $('.diesel', tr).value = pref.diesel || '';
+        $('input', r).value = pref.remarks || '';
+      }
+      $('#equipTable tbody').appendChild(tr);
+      bindRow(tr);
+      recalcEquip();
+    }
+
+    function recalcEquip(){
+      let totHM = 0, totDiesel = 0;
+      $$('#equipTable tbody tr').forEach(tr=>{
+        const start = num($('.hmStart', tr).value);
+        const end   = num($('.hmEnd', tr).value);
+        const hrs = Math.max(0, end - start);
+        $('.hmHours', tr).textContent = hrs.toFixed(2);
+        totHM += hrs;
+        totDiesel += num($('.diesel', tr).value);
+      });
+      $('#eq_total_hm').textContent = totHM.toFixed(2);
+      $('#eq_total_diesel').textContent = totDiesel.toFixed(2);
+    }
+
+    // ---- Materials table ----
+    function addMatRow(pref){
+      const tr = document.importNode($('#matRow').content, true).firstElementChild;
+      if(pref){
+        const [mat, src, loads, qper, unit, _tot, rem] = $$('td', tr);
+        $('input', mat).value = pref.material || '';
+        $('input', src).value = pref.source || '';
+        $('input', loads).value = pref.loads || '';
+        $('input', qper).value = pref.qtyPer || '';
+        $('select', unit).value = pref.unit || 't';
+        $('input', rem).value = pref.remarks || '';
+      }
+      $('#matTable tbody').appendChild(tr);
+      bindRow(tr);
+      recalcMat();
+    }
+
+    function recalcMat(){
+      // per-row total
+      const totals = new Map(); // unit -> total
+      $$('#matTable tbody tr').forEach(tr=>{
+        const loads = num($('.loads', tr).value);
+        const per   = num($('.qtyPer', tr).value);
+        const unit  = $('.unit', tr).value || 't';
+        const rowTot = loads * per;
+        $('.rowTotal', tr).textContent = rowTot ? rowTot.toFixed(2) : '0';
+        totals.set(unit, (totals.get(unit)||0) + rowTot);
+      });
+      // render unit map
+      const box = $('#matTotals');
+      box.innerHTML = '';
+      totals.forEach((v,u)=>{
+        const span = document.createElement('span');
+        span.className = 'pill';
+        span.textContent = `${v.toFixed(2)} ${u}`;
+        box.appendChild(span);
+      });
+    }
+
+    // ---- generic ----
+    function bindRow(tr){
+      tr.addEventListener('input', ()=>{ recalcAll(); saveLocal(); });
+      $('.del', tr)?.addEventListener('click', ()=>{
+        tr.remove(); recalcAll(); saveLocal();
+      });
+    }
+
+    function recalcAll(){ recalcEquip(); recalcMat(); }
+
+    // buttons
+    $('#addEquip').addEventListener('click', ()=>{ addEquipRow(); saveLocal(); });
+    $('#addMat').addEventListener('click', ()=>{ addMatRow(); saveLocal(); });
+    $('#saveBtn').addEventListener('click', ()=>{ saveLocal(); alert('Saved on this device for offline use.'); });
+    $('#printBtn').addEventListener('click', ()=>{ window.print(); });
+
+    // autosave meta fields
+    ['d_date','d_shift','d_weather','d_engineer','d_notes'].forEach(id=>{
+      $('#'+id).addEventListener('input', ()=>saveLocal());
+      $('#'+id).addEventListener('change', ()=>saveLocal());
     });
-  }
-</script>
+
+    // defaults
+    (function init(){
+      // default date today if empty
+      const d = $('#d_date');
+      if(!d.value){
+        const today = new Date().toISOString().slice(0,10);
+        d.value = today;
+      }
+      restoreLocal();
+    })();
+  </script>
 </body>
 </html>
