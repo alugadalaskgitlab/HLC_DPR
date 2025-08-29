@@ -1,20 +1,21 @@
-// sw.js — network-first for HTML; cache-first for other assets
-const CACHE_NAME = 'hlc-dpr-v8';
+// sw.js — network-first for HTML; cache-first for everything else
+const CACHE = 'hlc-dpr-v9';
+
 // Allow the page to tell the SW to activate immediately
 self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 const ASSETS = [
-  './', './index.html', './manifest.webmanifest', './sw.js',
-  './icons/icon-192.png', './icons/icon-512.png'
+  './', './index.html', './manifest.webmanifest',
+  './icons/icon-192.png', './icons/icon-512.png', './sw.js'
 ];
 
 self.addEventListener('install', (evt) => {
   evt.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting())
+    caches.open(CACHE)
+      .then(c => c.addAll(ASSETS))
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -29,7 +30,7 @@ self.addEventListener('activate', (evt) => {
 self.addEventListener('fetch', (evt) => {
   const req = evt.request;
 
-  // Always try network first for the HTML (app shell)
+  // App shell (HTML): network-first, fall back to cache
   if (req.mode === 'navigate' || req.destination === 'document') {
     evt.respondWith(
       fetch(req).then(res => {
@@ -41,7 +42,7 @@ self.addEventListener('fetch', (evt) => {
     return;
   }
 
-  // Everything else: cache-first, update the cache in background
+  // Other files: cache-first, then update cache in background
   evt.respondWith(
     caches.match(req).then(cached =>
       cached || fetch(req).then(res => {
