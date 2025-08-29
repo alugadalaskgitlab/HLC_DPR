@@ -1,5 +1,5 @@
 // sw.js — network-first for HTML; cache-first for everything else
-const CACHE = 'hlc-dpr-v9';
+const CACHE = 'hlc-dpr-v10';
 
 // Allow the page to tell the SW to activate immediately
 self.addEventListener('message', (event) => {
